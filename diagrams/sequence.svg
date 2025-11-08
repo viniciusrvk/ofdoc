@@ -1,0 +1,252 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1600">
+  <defs>
+    <style>
+      .title { font: bold 18px sans-serif; fill: #2c3e50; }
+      .actor { font: 13px sans-serif; fill: #2c3e50; font-weight: bold; }
+      .label { font: 11px sans-serif; fill: #34495e; }
+      .box { fill: #ecf0f1; stroke: #34495e; stroke-width: 2; }
+      .lifeline { stroke: #bdc3c7; stroke-width: 2; stroke-dasharray: 5,5; }
+      .arrow { stroke: #34495e; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .arrow-return { stroke: #7f8c8d; stroke-width: 1.5; fill: none; marker-end: url(#arrowhead-gray); stroke-dasharray: 3,3; }
+      .activation { fill: #3498db; opacity: 0.3; }
+      .note { fill: #ffffcc; stroke: #f39c12; stroke-width: 1; }
+      .note-text { font: 10px sans-serif; fill: #2c3e50; }
+      .step { font: 10px sans-serif; fill: #7f8c8d; font-weight: bold; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#34495e" />
+    </marker>
+    <marker id="arrowhead-gray" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#7f8c8d" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="700" y="25" text-anchor="middle" class="title">Sequence Diagram: POST /register com Validações</text>
+
+  <!-- Actors -->
+  <g id="actors">
+    <!-- TPP -->
+    <rect x="30" y="50" width="80" height="40" class="box" rx="5"/>
+    <text x="70" y="75" text-anchor="middle" class="actor">TPP</text>
+    <line x1="70" y1="90" x2="70" y2="1550" class="lifeline"/>
+
+    <!-- Gateway -->
+    <rect x="160" y="50" width="100" height="40" class="box" rx="5"/>
+    <text x="210" y="75" text-anchor="middle" class="actor">Gateway</text>
+    <line x1="210" y1="90" x2="210" y2="1550" class="lifeline"/>
+
+    <!-- DCR -->
+    <rect x="310" y="50" width="120" height="40" class="box" rx="5"/>
+    <text x="370" y="75" text-anchor="middle" class="actor">DCR Service</text>
+    <line x1="370" y1="90" x2="370" y2="1550" class="lifeline"/>
+
+    <!-- Redis -->
+    <rect x="480" y="50" width="80" height="40" class="box" rx="5"/>
+    <text x="520" y="75" text-anchor="middle" class="actor">Redis</text>
+    <line x1="520" y1="90" x2="520" y2="1550" class="lifeline"/>
+
+    <!-- Directory -->
+    <rect x="610" y="50" width="110" height="40" class="box" rx="5"/>
+    <text x="665" y="75" text-anchor="middle" class="actor">Diretório</text>
+    <line x1="665" y1="90" x2="665" y2="1550" class="lifeline"/>
+
+    <!-- Keycloak -->
+    <rect x="770" y="50" width="100" height="40" class="box" rx="5"/>
+    <text x="820" y="75" text-anchor="middle" class="actor">Keycloak</text>
+    <line x1="820" y1="90" x2="820" y2="1550" class="lifeline"/>
+
+    <!-- Postgres -->
+    <rect x="920" y="50" width="100" height="40" class="box" rx="5"/>
+    <text x="970" y="75" text-anchor="middle" class="actor">Postgres</text>
+    <line x1="970" y1="90" x2="970" y2="1550" class="lifeline"/>
+
+    <!-- SNS -->
+    <rect x="1070" y="50" width="80" height="40" class="box" rx="5"/>
+    <text x="1110" y="75" text-anchor="middle" class="actor">SNS</text>
+    <line x1="1110" y1="90" x2="1110" y2="1550" class="lifeline"/>
+
+    <!-- OTel -->
+    <rect x="1200" y="50" width="80" height="40" class="box" rx="5"/>
+    <text x="1240" y="75" text-anchor="middle" class="actor">OTel</text>
+    <line x1="1240" y1="90" x2="1240" y2="1550" class="lifeline"/>
+  </g>
+
+  <!-- Interactions -->
+  <g id="interactions">
+    <!-- Step 1: mTLS -->
+    <text x="10" y="130" class="step">1</text>
+    <rect x="30" y="115" width="200" height="30" class="note" rx="3"/>
+    <text x="130" y="133" text-anchor="middle" class="note-text">Conexão mTLS TLS 1.3</text>
+
+    <!-- Step 2: POST request -->
+    <text x="10" y="170" class="step">2</text>
+    <path d="M 70 160 L 210 160" class="arrow"/>
+    <text x="130" y="155" class="label">POST /register + SSA</text>
+
+    <!-- Step 3: Forward with headers -->
+    <text x="10" y="200" class="step">3</text>
+    <path d="M 210 190 L 370 190" class="arrow"/>
+    <text x="280" y="185" class="label">Headers do cert</text>
+
+    <!-- Step 4: Check idempotency -->
+    <text x="10" y="230" class="step">4</text>
+    <rect x="360" y="210" width="20" height="30" class="activation"/>
+    <path d="M 370 220 L 520 220" class="arrow"/>
+    <text x="435" y="215" class="label">GET jti</text>
+
+    <!-- Step 5: Cache hit scenario -->
+    <text x="10" y="270" class="step">5</text>
+    <rect x="510" y="240" width="20" height="30" class="activation"/>
+    <rect x="570" y="235" width="180" height="40" class="note" rx="3"/>
+    <text x="660" y="253" text-anchor="middle" class="note-text">Se JTI existe:</text>
+    <text x="660" y="268" text-anchor="middle" class="note-text">replay seguro → 201</text>
+
+    <!-- Step 6: Cache miss - continue -->
+    <text x="10" y="300" class="step">6</text>
+    <path d="M 520 290 L 370 290" class="arrow-return"/>
+    <text x="435" y="285" class="label">miss</text>
+
+    <!-- Step 7: Get JWKS from cache -->
+    <text x="10" y="330" class="step">7</text>
+    <path d="M 370 320 L 520 320" class="arrow"/>
+    <text x="435" y="315" class="label">GET jwks:directory</text>
+
+    <!-- Step 8: Cache miss -->
+    <text x="10" y="360" class="step">8</text>
+    <path d="M 520 350 L 370 350" class="arrow-return"/>
+    <text x="435" y="345" class="label">miss</text>
+
+    <!-- Step 9: Fetch JWKS -->
+    <text x="10" y="390" class="step">9</text>
+    <path d="M 370 380 L 665 380" class="arrow"/>
+    <text x="505" y="375" class="label">GET /jwks.json</text>
+
+    <!-- Step 10: Return JWKS -->
+    <text x="10" y="420" class="step">10</text>
+    <rect x="655" y="400" width="20" height="30" class="activation"/>
+    <path d="M 665 410 L 370 410" class="arrow-return"/>
+    <text x="505" y="405" class="label">JWKS</text>
+
+    <!-- Step 11: Cache JWKS -->
+    <text x="10" y="450" class="step">11</text>
+    <path d="M 370 440 L 520 440" class="arrow"/>
+    <text x="435" y="435" class="label">SETEX jwks TTL=300s</text>
+
+    <!-- Step 12: Validate SSA -->
+    <text x="10" y="490" class="step">12</text>
+    <rect x="360" y="470" width="20" height="50" class="activation"/>
+    <rect x="240" y="465" width="110" height="60" class="note" rx="3"/>
+    <text x="295" y="483" text-anchor="middle" class="note-text">Validar SSA:</text>
+    <text x="295" y="498" text-anchor="middle" class="note-text">• Assinatura PS256</text>
+    <text x="295" y="513" text-anchor="middle" class="note-text">• iat, exp, jti, aud</text>
+
+    <!-- Step 13: Error case - invalid SSA -->
+    <text x="10" y="560" class="step">13</text>
+    <rect x="450" y="540" width="200" height="50" class="note" rx="3"/>
+    <text x="550" y="558" text-anchor="middle" class="note-text">Se SSA inválido:</text>
+    <text x="550" y="573" text-anchor="middle" class="note-text">metric + 400 invalid_software_statement</text>
+
+    <!-- Step 14: Apply policies -->
+    <text x="10" y="620" class="step">14</text>
+    <rect x="220" y="600" width="140" height="70" class="note" rx="3"/>
+    <text x="290" y="618" text-anchor="middle" class="note-text">Aplicar Políticas FAPI-BR:</text>
+    <text x="290" y="633" text-anchor="middle" class="note-text">• jwks_uri obrigatório</text>
+    <text x="290" y="648" text-anchor="middle" class="note-text">• private_key_jwt</text>
+    <text x="290" y="663" text-anchor="middle" class="note-text">• grant_types, response_types</text>
+
+    <!-- Step 15: Error case - policy violation -->
+    <text x="10" y="710" class="step">15</text>
+    <rect x="450" y="690" width="200" height="50" class="note" rx="3"/>
+    <text x="550" y="708" text-anchor="middle" class="note-text">Se política violada:</text>
+    <text x="550" y="723" text-anchor="middle" class="note-text">metric + 400 invalid_client_metadata</text>
+
+    <!-- Step 16: Create client in Keycloak -->
+    <text x="10" y="770" class="step">16</text>
+    <path d="M 370 760 L 820 760" class="arrow"/>
+    <text x="575" y="755" class="label">Admin API: create client + bind cert</text>
+
+    <!-- Step 17: Error case - AS failure -->
+    <text x="10" y="810" class="step">17</text>
+    <rect x="810" y="780" width="20" height="50" class="activation"/>
+    <rect x="900" y="775" width="180" height="50" class="note" rx="3"/>
+    <text x="990" y="793" text-anchor="middle" class="note-text">Se erro no AS:</text>
+    <text x="990" y="808" text-anchor="middle" class="note-text">metric + 502 upstream_failure</text>
+
+    <!-- Step 18: Return client_id -->
+    <text x="10" y="860" class="step">18</text>
+    <path d="M 820 850 L 370 850" class="arrow-return"/>
+    <text x="575" y="845" class="label">client_id, RAT, endpoints</text>
+
+    <!-- Step 19: Persist to Postgres -->
+    <text x="10" y="890" class="step">19</text>
+    <path d="M 370 880 L 970 880" class="arrow"/>
+    <text x="650" y="875" class="label">INSERT registry + binding</text>
+
+    <!-- Step 20: Postgres ACK -->
+    <text x="10" y="920" class="step">20</text>
+    <rect x="960" y="900" width="20" height="30" class="activation"/>
+    <path d="M 970 910 L 370 910" class="arrow-return"/>
+    <text x="650" y="905" class="label">OK</text>
+
+    <!-- Step 21: Set idempotency -->
+    <text x="10" y="950" class="step">21</text>
+    <path d="M 370 940 L 520 940" class="arrow"/>
+    <text x="435" y="935" class="label">SETEX jti TTL=600s</text>
+
+    <!-- Step 22: Publish event -->
+    <text x="10" y="980" class="step">22</text>
+    <path d="M 370 970 L 1110 970" class="arrow"/>
+    <text x="720" y="965" class="label">Publish: client_registered</text>
+
+    <!-- Step 23: SNS ACK -->
+    <text x="10" y="1010" class="step">23</text>
+    <rect x="1100" y="990" width="20" height="30" class="activation"/>
+    <path d="M 1110 1000 L 370 1000" class="arrow-return"/>
+
+    <!-- Step 24: Send metrics -->
+    <text x="10" y="1040" class="step">24</text>
+    <path d="M 370 1030 L 1240 1030" class="arrow"/>
+    <text x="785" y="1025" class="label">Traces + Metrics (sucesso)</text>
+
+    <!-- Step 25: Return 201 -->
+    <text x="10" y="1070" class="step">25</text>
+    <path d="M 370 1060 L 210 1060" class="arrow-return"/>
+    <text x="280" y="1055" class="label">201 + payload</text>
+
+    <!-- Step 26: Forward to TPP -->
+    <text x="10" y="1100" class="step">26</text>
+    <path d="M 210 1090 L 70 1090" class="arrow-return"/>
+    <text x="130" y="1085" class="label">201 + payload</text>
+
+    <!-- Background processing -->
+    <text x="10" y="1150" class="step">*</text>
+    <rect x="30" y="1130" width="700" height="80" class="note" rx="5"/>
+    <text x="380" y="1150" text-anchor="middle" class="note-text" style="font-weight:bold;">Processamento Assíncrono em Background</text>
+    <text x="380" y="1170" text-anchor="middle" class="note-text">SNS → SQS (dcr-audit) → Audit Processor → S3 WORM</text>
+    <text x="380" y="1185" text-anchor="middle" class="note-text">Trilha de auditoria imutável com retenção regulatória (5 anos)</text>
+    <text x="380" y="1200" text-anchor="middle" class="note-text">Inclui: jti, ssa_sha256, decision, client_snapshot, bindings, trace_id</text>
+
+    <!-- Alternative flows -->
+    <text x="10" y="1260" class="step">Alt</text>
+    <rect x="30" y="1240" width="1200" height="220" class="note" rx="5"/>
+    <text x="630" y="1260" text-anchor="middle" class="note-text" style="font-weight:bold;">Fluxos Alternativos de Erro</text>
+    
+    <text x="50" y="1285" class="note-text" style="font-weight:bold;">1. mTLS Inválido (step 2):</text>
+    <text x="70" y="1300" class="note-text">→ Gateway retorna 401/403 invalid_client</text>
+    
+    <text x="50" y="1325" class="note-text" style="font-weight:bold;">2. JTI existe no cache (step 5):</text>
+    <text x="70" y="1340" class="note-text">→ DCR retorna 201 com payload cacheado (idempotência segura)</text>
+    
+    <text x="50" y="1365" class="note-text" style="font-weight:bold;">3. SSA Inválido (step 12-13):</text>
+    <text x="70" y="1380" class="note-text">→ DCR envia metric dcr_error{type=ssa_invalid} para OTel</text>
+    <text x="70" y="1395" class="note-text">→ DCR retorna 400 {error: "invalid_software_statement"}</text>
+    
+    <text x="50" y="1420" class="note-text" style="font-weight:bold;">4. Violação de Política FAPI-BR (step 14-15):</text>
+    <text x="70" y="1435" class="note-text">→ DCR envia metric dcr_error{type=metadata_policy_violation}</text>
+    <text x="70" y="1450" class="note-text">→ DCR retorna 400 {error: "invalid_client_metadata"}</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="700" y="1530" text-anchor="middle" class="label">DCR Enterprise - Sequence Diagram Completo - Nov 2025</text>
+</svg>

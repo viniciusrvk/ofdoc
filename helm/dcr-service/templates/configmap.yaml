@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMapRef.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "dcr-service.labels" . | nindent 4 }}
+data:
+  DCR_DIR_JWKS_URL: {{ .Values.config.dcr.directory.jwksUrl | quote }}
+  DCR_JWKS_TTL_SEC: {{ .Values.config.dcr.directory.jwksTtlSeconds | quote }}
+  DCR_SSA_IAT_SKEW_SEC: {{ .Values.config.dcr.ssa.iatSkewSeconds | quote }}
+  DCR_IDEMPOTENCY_TTL_SEC: {{ .Values.config.dcr.idempotency.ttlSeconds | quote }}
+  DCR_RATE_PER_MIN_PER_ORG: {{ .Values.config.dcr.rate.perMinutePerOrg | quote }}
+  KEYCLOAK_REALM: {{ .Values.config.dcr.keycloak.realm | quote }}
+  KEYCLOAK_PAR_REQUIRED: {{ .Values.config.dcr.keycloak.parRequired | quote }}
+  S3_WORM_BUCKET: {{ .Values.config.dcr.audit.s3Bucket | quote }}
+  S3_WORM_PREFIX: {{ .Values.config.dcr.audit.s3Prefix | quote }}
+  SNS_TOPIC_ARN: {{ .Values.messaging.sns.topicArn | quote }}
+  SQS_QUEUE_URL: {{ .Values.messaging.sqs.queueUrl | quote }}
+  DB_POOL_SIZE: {{ .Values.database.poolSize | quote }}
+  DB_CONNECTION_TIMEOUT: {{ .Values.database.connectionTimeout | quote }}
+  REDIS_TIMEOUT: {{ .Values.redis.timeout | quote }}
+  REDIS_POOL_SIZE: {{ .Values.redis.poolSize | quote }}
+  OTEL_TRACES_ENABLED: {{ .Values.config.dcr.observability.tracingEnabled | quote }}
+  OTEL_METRICS_ENABLED: {{ .Values.config.dcr.observability.metricsEnabled | quote }}

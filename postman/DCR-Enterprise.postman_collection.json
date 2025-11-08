@@ -1,0 +1,439 @@
+{
+  "info": {
+    "name": "DCR Enterprise - Open Finance Brasil",
+    "description": "Coleção completa de testes para Dynamic Client Registration (DCR) conforme FAPI-BR, RFC 7591/7592",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "item": [
+    {
+      "name": "1. Registro com Sucesso",
+      "item": [
+        {
+          "name": "POST /register - Registro Completo (Sucesso)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Gerar SSA válido (mock - em produção viria do Diretório)",
+                  "const jti = pm.variables.replaceIn('{{$guid}}');",
+                  "pm.environment.set('ssa_jti', jti);",
+                  "",
+                  "// Simular timestamp",
+                  "const now = Math.floor(Date.now() / 1000);",
+                  "pm.environment.set('ssa_iat', now);",
+                  "pm.environment.set('ssa_exp', now + 3600);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response possui client_id', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('client_id');",
+                  "    pm.environment.set('client_id', jsonData.client_id);",
+                  "});",
+                  "",
+                  "pm.test('Response possui registration_access_token', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('registration_access_token');",
+                  "    pm.environment.set('registration_access_token', jsonData.registration_access_token);",
+                  "});",
+                  "",
+                  "pm.test('Response possui registration_client_uri', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('registration_client_uri');",
+                  "});",
+                  "",
+                  "pm.test('token_endpoint_auth_method é private_key_jwt', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.token_endpoint_auth_method).to.eql('private_key_jwt');",
+                  "});",
+                  "",
+                  "pm.test('Tempo de resposta < 1000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-fapi-interaction-id",
+                "value": "{{$guid}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"software_statement\": \"eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1In0.eyJpc3MiOiJPcGVuIEJhbmtpbmcgT3BlbiBCYW5raW5nIEJyYXNpbCBwcm9kIFNTQSBpc3N1ZXIiLCJpYXQiOnt7c3NhX2lhdH19LCJleHAiOnt7c3NhX2V4cH19LCJqdGkiOiJ7e3NzYV9qdGl9fSIsIm9yZ19pZCI6Ijk3OTYwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMSIsInNvZnR3YXJlX2lkIjoic29mdC0xMjM0NTYiLCJzb2Z0d2FyZV9uYW1lIjoiVFBQIEV4YW1wbGUgQXBwIiwic29mdHdhcmVfY2xpZW50X25hbWUiOiJUUFAgRXhhbXBsZSBBcHAiLCJzb2Z0d2FyZV92ZXJzaW9uIjoiMS4wLjAiLCJzb2Z0d2FyZV9lbnZpcm9ubWVudCI6InByb2R1Y3Rpb24iLCJzb2Z0d2FyZV9yb2xlcyI6WyJEQURPUyIsIlBBR1RPIl0sInNvZnR3YXJlX2p3a3NfZW5kcG9pbnQiOiJodHRwczovL2NsaWVudGUuZXhhbXBsZS5jb20vandrcyIsInNvZnR3YXJlX3BvbGljeV91cmkiOiJodHRwczovL2NsaWVudGUuZXhhbXBsZS5jb20vcG9saWN5Iiwic29mdHdhcmVfdG9zX3VyaSI6Imh0dHBzOi8vY2xpZW50ZS5leGFtcGxlLmNvbS90b3MifQ.mock-signature\",\n  \"jwks_uri\": \"https://cliente.example.com/jwks.json\",\n  \"redirect_uris\": [\n    \"https://cliente.example.com/callback\"\n  ],\n  \"grant_types\": [\n    \"authorization_code\",\n    \"client_credentials\"\n  ],\n  \"response_types\": [\n    \"code\"\n  ],\n  \"token_endpoint_auth_method\": \"private_key_jwt\",\n  \"request_object_signing_alg\": \"PS256\",\n  \"id_token_signed_response_alg\": \"PS256\",\n  \"scope\": \"openid accounts payments\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/openbanking/register",
+              "host": ["{{base_url}}"],
+              "path": ["openbanking", "register"]
+            }
+          }
+        },
+        {
+          "name": "GET /register/{client_id} - Obter Configuração",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response possui client_id correto', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.client_id).to.eql(pm.environment.get('client_id'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{registration_access_token}}"
+              },
+              {
+                "key": "x-fapi-interaction-id",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/openbanking/register/{{client_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["openbanking", "register", "{{client_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Testes de Idempotência",
+      "item": [
+        {
+          "name": "POST /register - Replay com mesmo JTI (Idempotente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 201 Created (replay seguro)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('client_id é o mesmo do registro anterior', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.client_id).to.eql(pm.environment.get('client_id'));",
+                  "});",
+                  "",
+                  "pm.test('Tempo de resposta rápido (cache)', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(300);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"software_statement\": \"eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1In0.eyJpc3MiOiJPcGVuIEJhbmtpbmcgT3BlbiBCYW5raW5nIEJyYXNpbCBwcm9kIFNTQSBpc3N1ZXIiLCJpYXQiOnt7c3NhX2lhdH19LCJleHAiOnt7c3NhX2V4cH19LCJqdGkiOiJ7e3NzYV9qdGl9fSIsIm9yZ19pZCI6Ijk3OTYwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMSIsInNvZnR3YXJlX2lkIjoic29mdC0xMjM0NTYiLCJzb2Z0d2FyZV9uYW1lIjoiVFBQIEV4YW1wbGUgQXBwIiwic29mdHdhcmVfY2xpZW50X25hbWUiOiJUUFAgRXhhbXBsZSBBcHAiLCJzb2Z0d2FyZV92ZXJzaW9uIjoiMS4wLjAiLCJzb2Z0d2FyZV9lbnZpcm9ubWVudCI6InByb2R1Y3Rpb24iLCJzb2Z0d2FyZV9yb2xlcyI6WyJEQURPUyIsIlBBR1RPIl0sInNvZnR3YXJlX2p3a3NfZW5kcG9pbnQiOiJodHRwczovL2NsaWVudGUuZXhhbXBsZS5jb20vandrcyIsInNvZnR3YXJlX3BvbGljeV91cmkiOiJodHRwczovL2NsaWVudGUuZXhhbXBsZS5jb20vcG9saWN5Iiwic29mdHdhcmVfdG9zX3VyaSI6Imh0dHBzOi8vY2xpZW50ZS5leGFtcGxlLmNvbS90b3MifQ.mock-signature\",\n  \"jwks_uri\": \"https://cliente.example.com/jwks.json\",\n  \"redirect_uris\": [\n    \"https://cliente.example.com/callback\"\n  ],\n  \"grant_types\": [\n    \"authorization_code\",\n    \"client_credentials\"\n  ],\n  \"response_types\": [\n    \"code\"\n  ],\n  \"token_endpoint_auth_method\": \"private_key_jwt\",\n  \"request_object_signing_alg\": \"PS256\",\n  \"id_token_signed_response_alg\": \"PS256\",\n  \"scope\": \"openid accounts payments\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/openbanking/register",
+              "host": ["{{base_url}}"],
+              "path": ["openbanking", "register"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Testes de Erro - SSA Inválido",
+      "item": [
+        {
+          "name": "POST /register - SSA Expirado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error é invalid_software_statement', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.eql('invalid_software_statement');",
+                  "});",
+                  "",
+                  "pm.test('Possui error_description', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error_description');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"software_statement\": \"eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJPcGVuIEJhbmtpbmciLCJpYXQiOjE2MDAwMDAwMDAsImV4cCI6MTYwMDAwMDEwMCwianRpIjoiZXhwaXJlZCJ9.mock\",\n  \"jwks_uri\": \"https://cliente.example.com/jwks.json\",\n  \"redirect_uris\": [\"https://cliente.example.com/callback\"],\n  \"grant_types\": [\"authorization_code\"],\n  \"response_types\": [\"code\"],\n  \"token_endpoint_auth_method\": \"private_key_jwt\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/openbanking/register",
+              "host": ["{{base_url}}"],
+              "path": ["openbanking", "register"]
+            }
+          }
+        },
+        {
+          "name": "POST /register - SSA com Assinatura Inválida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error é invalid_software_statement', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.eql('invalid_software_statement');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"software_statement\": \"invalid.jwt.signature\",\n  \"jwks_uri\": \"https://cliente.example.com/jwks.json\",\n  \"redirect_uris\": [\"https://cliente.example.com/callback\"],\n  \"grant_types\": [\"authorization_code\"],\n  \"response_types\": [\"code\"],\n  \"token_endpoint_auth_method\": \"private_key_jwt\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/openbanking/register",
+              "host": ["{{base_url}}"],
+              "path": ["openbanking", "register"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Testes de Erro - Violação de Política",
+      "item": [
+        {
+          "name": "POST /register - JWKS Inline (Proibido)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error é invalid_client_metadata', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.eql('invalid_client_metadata');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"software_statement\": \"valid.ssa.jwt\",\n  \"jwks\": {\"keys\": [{\"kty\": \"RSA\"}]},\n  \"redirect_uris\": [\"https://cliente.example.com/callback\"],\n  \"grant_types\": [\"authorization_code\"],\n  \"response_types\": [\"code\"],\n  \"token_endpoint_auth_method\": \"private_key_jwt\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/openbanking/register",
+              "host": ["{{base_url}}"],
+              "path": ["openbanking", "register"]
+            }
+          }
+        },
+        {
+          "name": "POST /register - client_secret_basic (Proibido)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error é invalid_client_metadata', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.eql('invalid_client_metadata');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"software_statement\": \"valid.ssa.jwt\",\n  \"jwks_uri\": \"https://cliente.example.com/jwks.json\",\n  \"redirect_uris\": [\"https://cliente.example.com/callback\"],\n  \"grant_types\": [\"authorization_code\"],\n  \"response_types\": [\"code\"],\n  \"token_endpoint_auth_method\": \"client_secret_basic\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/openbanking/register",
+              "host": ["{{base_url}}"],
+              "path": ["openbanking", "register"]
+            }
+          }
+        },
+        {
+          "name": "POST /register - Grant Type Não Permitido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error é invalid_client_metadata', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.eql('invalid_client_metadata');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"software_statement\": \"valid.ssa.jwt\",\n  \"jwks_uri\": \"https://cliente.example.com/jwks.json\",\n  \"redirect_uris\": [\"https://cliente.example.com/callback\"],\n  \"grant_types\": [\"password\", \"implicit\"],\n  \"response_types\": [\"code\"],\n  \"token_endpoint_auth_method\": \"private_key_jwt\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/openbanking/register",
+              "host": ["{{base_url}}"],
+              "path": ["openbanking", "register"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Testes de Segurança",
+      "item": [
+        {
+          "name": "POST /register - Sem Certificado mTLS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 401 ou 403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "});",
+                  "",
+                  "pm.test('Error é invalid_client', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.eql('invalid_client');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"software_statement\": \"valid.ssa.jwt\",\n  \"jwks_uri\": \"https://cliente.example.com/jwks.json\",\n  \"redirect_uris\": [\"https://cliente.example.com/callback\"],\n  \"grant_types\": [\"authorization_code\"],\n  \"response_types\": [\"code\"],\n  \"token_endpoint_auth_method\": \"private_key_jwt\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_no_mtls}}/openbanking/register",
+              "host": ["{{base_url_no_mtls}}"],
+              "path": ["openbanking", "register"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

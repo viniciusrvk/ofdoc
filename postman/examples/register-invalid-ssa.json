@@ -1,0 +1,14 @@
+{
+  "software_statement": "eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJPcGVuIEJhbmtpbmciLCJpYXQiOjE2MDAwMDAwMDAsImV4cCI6MTYwMDAwMDEwMCwianRpIjoiZXhwaXJlZC1zc2EifQ.invalid-signature",
+  "jwks_uri": "https://cliente.example.com/jwks.json",
+  "redirect_uris": [
+    "https://cliente.example.com/callback"
+  ],
+  "grant_types": [
+    "authorization_code"
+  ],
+  "response_types": [
+    "code"
+  ],
+  "token_endpoint_auth_method": "private_key_jwt"
+}

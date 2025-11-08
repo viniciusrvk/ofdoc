@@ -1,0 +1,200 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900">
+  <defs>
+    <style>
+      .title { font: bold 24px sans-serif; fill: #2c3e50; }
+      .component { font: 14px sans-serif; fill: #2c3e50; }
+      .label { font: 12px sans-serif; fill: #7f8c8d; }
+      .box { fill: #ecf0f1; stroke: #34495e; stroke-width: 2; }
+      .box-primary { fill: #3498db; stroke: #2980b9; stroke-width: 2; }
+      .box-success { fill: #2ecc71; stroke: #27ae60; stroke-width: 2; }
+      .box-warning { fill: #f39c12; stroke: #e67e22; stroke-width: 2; }
+      .box-danger { fill: #e74c3c; stroke: #c0392b; stroke-width: 2; }
+      .box-info { fill: #9b59b6; stroke: #8e44ad; stroke-width: 2; }
+      .arrow { stroke: #34495e; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .arrow-data { stroke: #3498db; stroke-width: 2; fill: none; marker-end: url(#arrowhead-blue); stroke-dasharray: 5,5; }
+      .text-white { fill: white; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#34495e" />
+    </marker>
+    <marker id="arrowhead-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#3498db" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="700" y="30" text-anchor="middle" class="title">DCR Enterprise - Arquitetura de Alto Nível</text>
+
+  <!-- TPP Client -->
+  <g id="tpp">
+    <rect x="50" y="60" width="180" height="80" class="box-danger" rx="5"/>
+    <text x="140" y="90" text-anchor="middle" class="component text-white">TPP Cliente</text>
+    <text x="140" y="110" text-anchor="middle" class="label text-white">Instituição Participante</text>
+    <text x="140" y="125" text-anchor="middle" class="label text-white">Certificado mTLS ICP-Brasil</text>
+  </g>
+
+  <!-- API Gateway -->
+  <g id="gateway">
+    <rect x="350" y="50" width="220" height="100" class="box-warning" rx="5"/>
+    <text x="460" y="80" text-anchor="middle" class="component text-white">API Gateway</text>
+    <text x="460" y="100" text-anchor="middle" class="label text-white">• mTLS TLS 1.3</text>
+    <text x="460" y="115" text-anchor="middle" class="label text-white">• WAF + Rate Limit</text>
+    <text x="460" y="130" text-anchor="middle" class="label text-white">• Header Injection</text>
+  </g>
+
+  <!-- DCR Service -->
+  <g id="dcr">
+    <rect x="400" y="220" width="260" height="140" class="box-primary" rx="5"/>
+    <text x="530" y="250" text-anchor="middle" class="component text-white">DCR Service</text>
+    <text x="530" y="270" text-anchor="middle" class="label text-white">Java 25 + Spring Boot 3.x</text>
+    <text x="530" y="290" text-anchor="middle" class="label text-white">• Validação SSA</text>
+    <text x="530" y="305" text-anchor="middle" class="label text-white">• Policy Engine FAPI-BR</text>
+    <text x="530" y="320" text-anchor="middle" class="label text-white">• Idempotência (jti)</text>
+    <text x="530" y="335" text-anchor="middle" class="label text-white">• Cert Binding</text>
+    <text x="530" y="350" text-anchor="middle" class="label text-white">• Eventos e Métricas</text>
+  </g>
+
+  <!-- Keycloak AS -->
+  <g id="keycloak">
+    <rect x="800" y="220" width="200" height="120" class="box-success" rx="5"/>
+    <text x="900" y="250" text-anchor="middle" class="component text-white">Keycloak AS</text>
+    <text x="900" y="270" text-anchor="middle" class="label text-white">OIDC + FAPI-BR</text>
+    <text x="900" y="290" text-anchor="middle" class="label text-white">• PAR Required</text>
+    <text x="900" y="305" text-anchor="middle" class="label text-white">• private_key_jwt</text>
+    <text x="900" y="320" text-anchor="middle" class="label text-white">• mTLS Binding</text>
+    <text x="900" y="335" text-anchor="middle" class="label text-white">• Discovery</text>
+  </g>
+
+  <!-- Directory -->
+  <g id="directory">
+    <rect x="50" y="220" width="200" height="80" class="box-info" rx="5"/>
+    <text x="150" y="250" text-anchor="middle" class="component text-white">Diretório Central</text>
+    <text x="150" y="270" text-anchor="middle" class="label text-white">Open Finance Brasil</text>
+    <text x="150" y="285" text-anchor="middle" class="label text-white">JWKS + Registro de Org</text>
+  </g>
+
+  <!-- Data Layer -->
+  <g id="data-layer">
+    <text x="700" y="430" text-anchor="middle" class="label">Camada de Dados</text>
+    
+    <!-- PostgreSQL -->
+    <rect x="100" y="450" width="160" height="80" class="box" rx="5"/>
+    <text x="180" y="480" text-anchor="middle" class="component">PostgreSQL</text>
+    <text x="180" y="500" text-anchor="middle" class="label">Registry</text>
+    <text x="180" y="515" text-anchor="middle" class="label">Bindings</text>
+
+    <!-- Redis -->
+    <rect x="300" y="450" width="160" height="80" class="box" rx="5"/>
+    <text x="380" y="480" text-anchor="middle" class="component">Redis</text>
+    <text x="380" y="500" text-anchor="middle" class="label">Cache JWKS</text>
+    <text x="380" y="515" text-anchor="middle" class="label">Idempotência</text>
+
+    <!-- MongoDB -->
+    <rect x="500" y="450" width="160" height="80" class="box" rx="5"/>
+    <text x="580" y="480" text-anchor="middle" class="component">MongoDB</text>
+    <text x="580" y="500" text-anchor="middle" class="label">Arquivo SSA</text>
+    <text x="580" y="515" text-anchor="middle" class="label">(Opcional)</text>
+  </g>
+
+  <!-- Event Layer -->
+  <g id="event-layer">
+    <text x="1050" y="430" text-anchor="middle" class="label">Eventos e Auditoria</text>
+    
+    <!-- SNS -->
+    <rect x="750" y="450" width="120" height="60" class="box" rx="5"/>
+    <text x="810" y="475" text-anchor="middle" class="component">SNS</text>
+    <text x="810" y="495" text-anchor="middle" class="label">dcr-events</text>
+
+    <!-- SQS -->
+    <rect x="900" y="450" width="120" height="60" class="box" rx="5"/>
+    <text x="960" y="475" text-anchor="middle" class="component">SQS</text>
+    <text x="960" y="495" text-anchor="middle" class="label">dcr-audit</text>
+
+    <!-- S3 WORM -->
+    <rect x="1050" y="450" width="140" height="60" class="box" rx="5"/>
+    <text x="1120" y="475" text-anchor="middle" class="component">S3 WORM</text>
+    <text x="1120" y="495" text-anchor="middle" class="label">Trilha Imutável</text>
+  </g>
+
+  <!-- Observability -->
+  <g id="observability">
+    <rect x="100" y="600" width="280" height="80" class="box-primary" rx="5"/>
+    <text x="240" y="630" text-anchor="middle" class="component text-white">OpenTelemetry</text>
+    <text x="240" y="650" text-anchor="middle" class="label text-white">Traces • Metrics • Logs</text>
+    <text x="240" y="665" text-anchor="middle" class="label text-white">Datadog / Prometheus / Grafana</text>
+  </g>
+
+  <!-- Console -->
+  <g id="console">
+    <rect x="450" y="600" width="240" height="80" class="box" rx="5"/>
+    <text x="570" y="630" text-anchor="middle" class="component">Console React</text>
+    <text x="570" y="650" text-anchor="middle" class="label">Operação e Compliance</text>
+    <text x="570" y="665" text-anchor="middle" class="label">RBAC • Auditoria • Suporte</text>
+  </g>
+
+  <!-- KMS/HSM -->
+  <g id="kms">
+    <rect x="1050" y="600" width="180" height="60" class="box-success" rx="5"/>
+    <text x="1140" y="625" text-anchor="middle" class="component text-white">KMS / CloudHSM</text>
+    <text x="1140" y="645" text-anchor="middle" class="label text-white">Chaves do AS</text>
+  </g>
+
+  <!-- Arrows -->
+  <!-- TPP to Gateway -->
+  <path d="M 230 100 L 350 100" class="arrow"/>
+  <text x="280" y="90" class="label">mTLS</text>
+
+  <!-- Gateway to DCR -->
+  <path d="M 460 150 L 530 220" class="arrow"/>
+  <text x="480" y="180" class="label">Headers</text>
+
+  <!-- DCR to Keycloak -->
+  <path d="M 660 280 L 800 280" class="arrow"/>
+  <text x="715" y="270" class="label">Admin API</text>
+
+  <!-- DCR to Directory -->
+  <path d="M 400 280 L 250 260" class="arrow"/>
+  <text x="300" y="260" class="label">JWKS</text>
+
+  <!-- DCR to PostgreSQL -->
+  <path d="M 450 360 L 220 450" class="arrow-data"/>
+
+  <!-- DCR to Redis -->
+  <path d="M 500 360 L 400 450" class="arrow-data"/>
+
+  <!-- DCR to MongoDB -->
+  <path d="M 560 360 L 580 450" class="arrow-data"/>
+
+  <!-- DCR to SNS -->
+  <path d="M 660 320 L 750 480" class="arrow-data"/>
+
+  <!-- SNS to SQS -->
+  <path d="M 870 480 L 900 480" class="arrow"/>
+
+  <!-- SQS to S3 -->
+  <path d="M 1020 480 L 1050 480" class="arrow"/>
+
+  <!-- DCR to OTel -->
+  <path d="M 400 320 L 280 600" class="arrow-data"/>
+
+  <!-- Keycloak to OTel -->
+  <path d="M 800 300 L 350 600" class="arrow-data"/>
+
+  <!-- Console to DCR -->
+  <path d="M 530 600 L 530 360" class="arrow-data"/>
+
+  <!-- KMS to Keycloak -->
+  <path d="M 1050 620 L 1000 320" class="arrow-data"/>
+
+  <!-- Legend -->
+  <g id="legend">
+    <text x="50" y="750" class="label">Legenda:</text>
+    <line x1="50" y1="770" x2="100" y2="770" class="arrow"/>
+    <text x="110" y="775" class="label">Fluxo de requisição</text>
+    <line x1="50" y1="790" x2="100" y2="790" class="arrow-data"/>
+    <text x="110" y="795" class="label">Fluxo de dados</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="700" y="870" text-anchor="middle" class="label">DCR Enterprise v1.0 - Open Finance Brasil - Nov 2025</text>
+</svg>

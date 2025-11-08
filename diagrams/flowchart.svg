@@ -1,0 +1,214 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200">
+  <defs>
+    <style>
+      .title { font: bold 20px sans-serif; fill: #2c3e50; }
+      .component { font: 13px sans-serif; fill: #2c3e50; }
+      .label { font: 11px sans-serif; fill: #7f8c8d; }
+      .box { fill: #ecf0f1; stroke: #34495e; stroke-width: 2; }
+      .box-start { fill: #2ecc71; stroke: #27ae60; stroke-width: 2; }
+      .box-process { fill: #3498db; stroke: #2980b9; stroke-width: 2; }
+      .box-decision { fill: #f39c12; stroke: #e67e22; stroke-width: 2; }
+      .box-error { fill: #e74c3c; stroke: #c0392b; stroke-width: 2; }
+      .box-success { fill: #2ecc71; stroke: #27ae60; stroke-width: 2; }
+      .arrow { stroke: #34495e; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .text-white { fill: white; font-weight: bold; }
+      .text-small { font-size: 10px; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#34495e" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="800" y="30" text-anchor="middle" class="title">DCR Enterprise - Fluxo de Registro (POST /register)</text>
+
+  <!-- Start -->
+  <ellipse cx="800" cy="80" rx="80" ry="35" class="box-start"/>
+  <text x="800" y="85" text-anchor="middle" class="component text-white">Início</text>
+
+  <!-- TPP Request -->
+  <rect x="700" y="140" width="200" height="60" class="box-process" rx="5"/>
+  <text x="800" y="165" text-anchor="middle" class="component text-white">TPP envia</text>
+  <text x="800" y="182" text-anchor="middle" class="label text-white">POST /register + SSA</text>
+  <text x="800" y="195" text-anchor="middle" class="label text-white text-small">via mTLS</text>
+
+  <!-- API Gateway -->
+  <rect x="700" y="230" width="200" height="60" class="box-process" rx="5"/>
+  <text x="800" y="255" text-anchor="middle" class="component text-white">API Gateway</text>
+  <text x="800" y="272" text-anchor="middle" class="label text-white">Valida mTLS</text>
+  <text x="800" y="285" text-anchor="middle" class="label text-white text-small">Injeta headers do cert</text>
+
+  <!-- mTLS Valid? -->
+  <polygon points="800,320 900,360 800,400 700,360" class="box-decision"/>
+  <text x="800" y="365" text-anchor="middle" class="component text-white">mTLS</text>
+  <text x="800" y="378" text-anchor="middle" class="component text-white">válido?</text>
+
+  <!-- mTLS Error -->
+  <rect x="1000" y="330" width="150" height="60" class="box-error" rx="5"/>
+  <text x="1075" y="355" text-anchor="middle" class="component text-white">401 / 403</text>
+  <text x="1075" y="370" text-anchor="middle" class="label text-white">invalid_client</text>
+
+  <!-- Check Idempotency -->
+  <rect x="700" y="430" width="200" height="60" class="box-process" rx="5"/>
+  <text x="800" y="455" text-anchor="middle" class="component text-white">Verificar Idempotência</text>
+  <text x="800" y="472" text-anchor="middle" class="label text-white">Redis: jti do SSA</text>
+
+  <!-- Idempotent? -->
+  <polygon points="800,520 900,560 800,600 700,560" class="box-decision"/>
+  <text x="800" y="560" text-anchor="middle" class="component text-white">JTI</text>
+  <text x="800" y="573" text-anchor="middle" class="component text-white">existe?</text>
+
+  <!-- Return Cached -->
+  <rect x="1000" y="530" width="150" height="60" class="box-success" rx="5"/>
+  <text x="1075" y="555" text-anchor="middle" class="component text-white">201 Replay</text>
+  <text x="1075" y="570" text-anchor="middle" class="label text-white">Cache seguro</text>
+
+  <!-- Validate SSA -->
+  <rect x="700" y="630" width="200" height="80" class="box-process" rx="5"/>
+  <text x="800" y="655" text-anchor="middle" class="component text-white">Validar SSA</text>
+  <text x="800" y="672" text-anchor="middle" class="label text-white">• Assinatura (PS256)</text>
+  <text x="800" y="687" text-anchor="middle" class="label text-white">• iat, exp, jti, iss, aud</text>
+  <text x="800" y="702" text-anchor="middle" class="label text-white">• JWKS do Diretório</text>
+
+  <!-- SSA Valid? -->
+  <polygon points="800,740 900,780 800,820 700,780" class="box-decision"/>
+  <text x="800" y="780" text-anchor="middle" class="component text-white">SSA</text>
+  <text x="800" y="793" text-anchor="middle" class="component text-white">válido?</text>
+
+  <!-- SSA Error -->
+  <rect x="1000" y="750" width="180" height="60" class="box-error" rx="5"/>
+  <text x="1090" y="775" text-anchor="middle" class="component text-white">400 Bad Request</text>
+  <text x="1090" y="790" text-anchor="middle" class="label text-white">invalid_software_statement</text>
+
+  <!-- Apply Policies -->
+  <rect x="700" y="850" width="200" height="90" class="box-process" rx="5"/>
+  <text x="800" y="875" text-anchor="middle" class="component text-white">Aplicar Políticas FAPI-BR</text>
+  <text x="800" y="892" text-anchor="middle" class="label text-white">• Exigir jwks_uri</text>
+  <text x="800" y="907" text-anchor="middle" class="label text-white">• private_key_jwt</text>
+  <text x="800" y="922" text-anchor="middle" class="label text-white">• grant_types, response_types</text>
+  <text x="800" y="935" text-anchor="middle" class="label text-white text-small">• PAR required</text>
+
+  <!-- Policy Valid? -->
+  <polygon points="800,970 900,1010 800,1050 700,1010" class="box-decision"/>
+  <text x="800" y="1010" text-anchor="middle" class="component text-white">Políticas</text>
+  <text x="800" y="1023" text-anchor="middle" class="component text-white">OK?</text>
+
+  <!-- Policy Error -->
+  <rect x="1000" y="980" width="180" height="60" class="box-error" rx="5"/>
+  <text x="1090" y="1005" text-anchor="middle" class="component text-white">400 Bad Request</text>
+  <text x="1090" y="1020" text-anchor="middle" class="label text-white">invalid_client_metadata</text>
+
+  <!-- Create Client in AS -->
+  <rect x="520" y="1080" width="200" height="70" class="box-process" rx="5"/>
+  <text x="620" y="1105" text-anchor="middle" class="component text-white">Criar Client no Keycloak</text>
+  <text x="620" y="1122" text-anchor="middle" class="label text-white">Admin API</text>
+  <text x="620" y="137" text-anchor="middle" class="label text-white text-small">+ Bind cert (SubjectDN/SAN)</text>
+
+  <!-- AS Success? -->
+  <polygon points="620,1180 720,1220 620,1260 520,1220" class="box-decision"/>
+  <text x="620" y="1220" text-anchor="middle" class="component text-white">AS</text>
+  <text x="620" y="1233" text-anchor="middle" class="component text-white">sucesso?</text>
+
+  <!-- AS Error -->
+  <rect x="340" y="1190" width="140" height="60" class="box-error" rx="5"/>
+  <text x="410" y="1215" text-anchor="middle" class="component text-white">502</text>
+  <text x="410" y="1230" text-anchor="middle" class="label text-white">upstream_failure</text>
+
+  <!-- Persist Data -->
+  <rect x="740" y="1080" width="200" height="70" class="box-process" rx="5"/>
+  <text x="840" y="1105" text-anchor="middle" class="component text-white">Persistir no PostgreSQL</text>
+  <text x="840" y="1122" text-anchor="middle" class="label text-white">Registry + Binding</text>
+  <text x="840" y="1137" text-anchor="middle" class="label text-white text-small">+ Cache Redis (jti)</text>
+
+  <!-- Publish Event -->
+  <rect x="970" y="1080" width="180" height="70" class="box-process" rx="5"/>
+  <text x="1060" y="1105" text-anchor="middle" class="component text-white">Publicar Evento</text>
+  <text x="1060" y="1122" text-anchor="middle" class="label text-white">SNS: client_registered</text>
+  <text x="1060" y="1137" text-anchor="middle" class="label text-white text-small">→ SQS → S3 WORM</text>
+
+  <!-- Success Response -->
+  <rect x="700" y="1180" width="200" height="80" class="box-success" rx="5"/>
+  <text x="800" y="1205" text-anchor="middle" class="component text-white">201 Created</text>
+  <text x="800" y="1222" text-anchor="middle" class="label text-white">client_id</text>
+  <text x="800" y="1237" text-anchor="middle" class="label text-white">registration_access_token</text>
+  <text x="800" y="1252" text-anchor="middle" class="label text-white text-small">registration_client_uri</text>
+
+  <!-- End -->
+  <ellipse cx="800" cy="1310" rx="60" ry="30" class="box-start"/>
+  <text x="800" y="1315" text-anchor="middle" class="component text-white">Fim</text>
+
+  <!-- Flow Arrows -->
+  <path d="M 800 115 L 800 140" class="arrow"/>
+  <path d="M 800 200 L 800 230" class="arrow"/>
+  <path d="M 800 290 L 800 320" class="arrow"/>
+  
+  <!-- mTLS No -->
+  <path d="M 900 360 L 1000 360" class="arrow"/>
+  <text x="940 355" class="label">Não</text>
+  
+  <!-- mTLS Yes -->
+  <path d="M 800 400 L 800 430" class="arrow"/>
+  <text x="815" y="415" class="label">Sim</text>
+  
+  <path d="M 800 490 L 800 520" class="arrow"/>
+  
+  <!-- Idempotent Yes -->
+  <path d="M 900 560 L 1000 560" class="arrow"/>
+  <text x="940" y="555" class="label">Sim</text>
+  
+  <!-- Idempotent No -->
+  <path d="M 800 600 L 800 630" class="arrow"/>
+  <text x="815" y="615" class="label">Não</text>
+  
+  <path d="M 800 710 L 800 740" class="arrow"/>
+  
+  <!-- SSA Invalid -->
+  <path d="M 900 780 L 1000 780" class="arrow"/>
+  <text x="940" y="775" class="label">Não</text>
+  
+  <!-- SSA Valid -->
+  <path d="M 800 820 L 800 850" class="arrow"/>
+  <text x="815" y="835" class="label">Sim</text>
+  
+  <path d="M 800 940 L 800 970" class="arrow"/>
+  
+  <!-- Policy Invalid -->
+  <path d="M 900 1010 L 1000 1010" class="arrow"/>
+  <text x="940" y="1005" class="label">Não</text>
+  
+  <!-- Policy Valid -->
+  <path d="M 700 1010 L 620 1080" class="arrow"/>
+  <text x="650" y="1040" class="label">Sim</text>
+  
+  <!-- AS Error -->
+  <path d="M 520 1220 L 480 1220" class="arrow"/>
+  <text x="500" y="1215" class="label">Não</text>
+  
+  <!-- AS Success to Persist -->
+  <path d="M 720 1220 L 840 1150" class="arrow"/>
+  <text x="770" y="1180" class="label">Sim</text>
+  
+  <!-- Persist to Event -->
+  <path d="M 940 1115 L 970 1115" class="arrow"/>
+  
+  <!-- Event to Response -->
+  <path d="M 1060 1150 L 900 1220" class="arrow"/>
+  
+  <path d="M 800 1260 L 800 1280" class="arrow"/>
+
+  <!-- Legend -->
+  <g id="legend">
+    <text x="50" y="50" class="label">Legenda:</text>
+    <rect x="50" y="60" width="80" height="30" class="box-process" rx="3"/>
+    <text x="90" y="80" text-anchor="middle" class="label text-white">Processo</text>
+    <polygon points="90,110 130,130 90,150 50,130" class="box-decision"/>
+    <text x="90" y="135" text-anchor="middle" class="label text-white">Decisão</text>
+    <rect x="50" y="160" width="80" height="30" class="box-error" rx="3"/>
+    <text x="90" y="180" text-anchor="middle" class="label text-white">Erro</text>
+    <rect x="50" y="200" width="80" height="30" class="box-success" rx="3"/>
+    <text x="90" y="220" text-anchor="middle" class="label text-white">Sucesso</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="800" y="1350" text-anchor="middle" class="label">DCR Enterprise - Fluxo Detalhado com Validações - Nov 2025</text>
+</svg>

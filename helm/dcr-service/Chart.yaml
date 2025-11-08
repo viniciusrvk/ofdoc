@@ -1,0 +1,18 @@
+apiVersion: v2
+name: dcr-service
+description: Dynamic Client Registration Service for Open Finance Brasil
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - open-finance
+  - dcr
+  - fapi-br
+  - oauth2
+  - oidc
+maintainers:
+  - name: DCR Team
+    email: dcr-team@example.com
+home: https://github.com/org/dcr-enterprise
+sources:
+  - https://github.com/org/dcr-enterprise

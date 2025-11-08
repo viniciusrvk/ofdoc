@@ -1,0 +1,24 @@
+{
+  "software_statement": "valid.ssa.jwt.here",
+  "jwks": {
+    "keys": [
+      {
+        "kty": "RSA",
+        "use": "sig",
+        "kid": "123",
+        "n": "...",
+        "e": "AQAB"
+      }
+    ]
+  },
+  "redirect_uris": [
+    "https://cliente.example.com/callback"
+  ],
+  "grant_types": [
+    "authorization_code"
+  ],
+  "response_types": [
+    "code"
+  ],
+  "token_endpoint_auth_method": "client_secret_basic"
+}

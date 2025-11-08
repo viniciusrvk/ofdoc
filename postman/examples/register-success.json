@@ -1,0 +1,18 @@
+{
+  "software_statement": "eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1In0.eyJpc3MiOiJPcGVuIEJhbmtpbmcgT3BlbiBCYW5raW5nIEJyYXNpbCBwcm9kIFNTQSBpc3N1ZXIiLCJpYXQiOjE2OTk0NjI4MDAsImV4cCI6MTY5OTU0OTIwMCwianRpIjoiMTIzNDU2NzgtYWJjZC1lZmdoLTEyMzQtNTY3ODkwYWJjZGVmIiwib3JnX2lkIjoiOTc5NjAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAxIiwic29mdHdhcmVfaWQiOiJzb2Z0LTEyMzQ1NiIsInNvZnR3YXJlX25hbWUiOiJUUFAgRXhhbXBsZSBBcHAiLCJzb2Z0d2FyZV9jbGllbnRfbmFtZSI6IlRQUCBFeGFtcGxlIEFwcCIsInNvZnR3YXJlX3ZlcnNpb24iOiIxLjAuMCIsInNvZnR3YXJlX2Vudmlyb25tZW50IjoicHJvZHVjdGlvbiIsInNvZnR3YXJlX3JvbGVzIjpbIkRBRE9TIiwiUEFHVE8iXSwic29mdHdhcmVfandrc19lbmRwb2ludCI6Imh0dHBzOi8vY2xpZW50ZS5leGFtcGxlLmNvbS9qd2tzIiwic29mdHdhcmVfcG9saWN5X3VyaSI6Imh0dHBzOi8vY2xpZW50ZS5leGFtcGxlLmNvbS9wb2xpY3kiLCJzb2Z0d2FyZV90b3NfdXJpIjoiaHR0cHM6Ly9jbGllbnRlLmV4YW1wbGUuY29tL3RvcyJ9.mock-signature-here",
+  "jwks_uri": "https://cliente.example.com/jwks.json",
+  "redirect_uris": [
+    "https://cliente.example.com/callback"
+  ],
+  "grant_types": [
+    "authorization_code",
+    "client_credentials"
+  ],
+  "response_types": [
+    "code"
+  ],
+  "token_endpoint_auth_method": "private_key_jwt",
+  "request_object_signing_alg": "PS256",
+  "id_token_signed_response_alg": "PS256",
+  "scope": "openid accounts payments"
+}
