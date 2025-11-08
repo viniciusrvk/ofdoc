@@ -68,52 +68,343 @@ A navegação será **progressiva**: este README traz a visão macro; cada camad
 
 ## 5) Arquitetura lógica (geral)
 
+### 5.1 Visão de Contexto (C4 - Nível 1)
+
+```mermaid
+graph TB
+    User[Cliente Final]
+    OFB[Open Finance Brasil]
+    
+    subgraph Sistema["Sistema Open Finance"]
+        TX[Transmissor - Data Holder]
+        RX[Receptor - Data Recipient]
+    end
+    
+    DIR[Diretório de Participantes]
+    PCM[Plataforma de Coleta de Métricas]
+    LEGACY[Sistemas Legados]
+    
+    User -->|1. Autoriza compartilhamento| TX
+    User -->|2. Acessa dados agregados| RX
+    
+    RX -->|3. Registra software DCR/SSA| DIR
+    TX -->|4. Valida SSA| DIR
+    
+    RX -->|5. Solicita dados FAPI-BR| TX
+    TX -->|6. Consulta dados| LEGACY
+    
+    TX -->|7. Reporta métricas| PCM
+    RX -->|8. Reporta métricas| PCM
+    
+    style Sistema fill:#e1f5ff
+    style DIR fill:#fff4e1
+    style PCM fill:#ffe1f5
+```
+
+### 5.2 Visão de Containers (C4 - Nível 2)
+
+```mermaid
+graph TB
+    subgraph Cliente["Camada Cliente"]
+        WEB[Web App React]
+        MOBILE[Mobile App React Native]
+    end
+    
+    subgraph Receptor["Receptor - Data Recipient"]
+        RGW[Client Gateway Spring Boot]
+        RSCH[Collector Scheduler Spring Boot]
+        RWRK[Collector Worker Spring Boot]
+        RNORM[Normalizer Spring Boot]
+        RMON[Consent Monitor Spring Boot]
+    end
+    
+    subgraph Transmissor["Transmissor - Data Holder"]
+        AS[Keycloak FAPI Authorization Server]
+        CONS[Consents API Spring Boot]
+        RESS[Resources API Spring Boot]
+        CUST[Customers API Spring Boot]
+        ACCT[Accounts API Spring Boot]
+        QUOTA[Quotas Service Spring Boot]
+        DISC[Discovery API Spring Boot]
+    end
+    
+    subgraph Data["Camada de Dados"]
+        RXDB[(PostgreSQL Receptor)]
+        RXMONGO[(MongoDB Receptor)]
+        TXDB[(PostgreSQL Transmissor)]
+        REDIS[(Redis)]
+    end
+    
+    subgraph External["Sistemas Externos"]
+        LEGACY[API Monolito Sistemas Legados]
+        DIR[Diretório OFB]
+        PCMAPI[PCM API]
+    end
+    
+    subgraph Infra["Infraestrutura"]
+        SQS[AWS SQS]
+        SNS[AWS SNS]
+        OTEL[OpenTelemetry Collector]
+        PROM[Prometheus]
+    end
+    
+    WEB & MOBILE --> RGW
+    RGW --> AS
+    RGW --> CONS
+    RGW --> DIR
+    
+    RSCH --> SQS
+    SQS --> RWRK
+    RWRK --> RESS & CUST & ACCT
+    RWRK --> RXDB & RXMONGO
+    RNORM --> RXDB & RXMONGO
+    RMON --> RXDB
+    
+    AS --> TXDB
+    CONS --> TXDB
+    RESS & CUST & ACCT --> LEGACY
+    QUOTA --> REDIS
+    
+    AS & CONS & RESS & CUST & ACCT --> OTEL
+    RGW & RWRK & RNORM --> OTEL
+    OTEL --> PROM
+    
+    DISC --> PCMAPI
+    
+    style Receptor fill:#e1f5ff
+    style Transmissor fill:#ffe1e1
+    style Data fill:#e1ffe1
+    style External fill:#fff4e1
+```
+
+### 5.3 Fluxo de Dados (Transmissor)
+
 ```mermaid
 flowchart TD
-  subgraph Client[Cliente (Usuário)]
-    UI[App Web/Mobile (React)]
-  end
+    Start([Início]) --> DCR{DCR já<br/>realizado?}
+    
+    DCR -->|Não| RegSSA[Receptor obtém SSA<br/>do Diretório]
+    RegSSA --> RegClient[POST /register<br/>SSA + mTLS]
+    RegClient --> ValidSSA{SSA válido?}
+    ValidSSA -->|Não| ErrSSA[❌ 400 Bad Request]
+    ValidSSA -->|Sim| CreateClient[Cria client_id<br/>no Keycloak]
+    CreateClient --> DCR
+    
+    DCR -->|Sim| ConsentReq[Receptor inicia<br/>POST /consents]
+    ConsentReq --> PAR[PAR: Receptor envia<br/>JAR assinado]
+    PAR --> AuthRedir[Redireciona usuário<br/>para AS /authorize]
+    AuthRedir --> UserAuth[Usuário autentica<br/>LOA2/LOA3]
+    UserAuth --> UserConsent[Usuário autoriza<br/>escopos]
+    UserConsent --> JARM[AS retorna JARM<br/>código assinado]
+    JARM --> TokenExch[Receptor troca code<br/>por tokens mTLS]
+    TokenExch --> ValidToken{Token<br/>válido?}
+    
+    ValidToken -->|Não| ErrToken[❌ 401 Unauthorized]
+    ValidToken -->|Sim| SaveConsent[Grava consent<br/>no PostgreSQL]
+    SaveConsent --> PubEvent[Publica evento<br/>consent.created SNS]
+    
+    PubEvent --> DataReq[Receptor solicita dados<br/>GET /resources]
+    DataReq --> CheckQuota{Quota OK?}
+    CheckQuota -->|Não| Err423[❌ 423 Locked]
+    CheckQuota -->|Sim| CheckRate{Rate Limit<br/>OK?}
+    CheckRate -->|Não| Err429[❌ 429 Too Many]
+    CheckRate -->|Sim| ValidScope{Escopo/Consent<br/>válido?}
+    ValidScope -->|Não| Err403[❌ 403 Forbidden]
+    ValidScope -->|Sim| QueryLegacy[Consulta API<br/>Monolito Legado]
+    QueryLegacy --> Transform[Transforma para<br/>padrão OFB]
+    Transform --> ReturnData[✅ 200 OK + dados]
+    ReturnData --> UpdateMetrics[Atualiza métricas<br/>Prometheus]
+    UpdateMetrics --> End([Fim])
+    
+    style Start fill:#90EE90
+    style End fill:#90EE90
+    style ErrSSA fill:#FFB6C1
+    style ErrToken fill:#FFB6C1
+    style Err423 fill:#FFB6C1
+    style Err429 fill:#FFB6C1
+    style Err403 fill:#FFB6C1
+    style ReturnData fill:#90EE90
+```
 
-  subgraph Recipient[Receptor]
-    RGW[Client Gateway<br/>(PAR/JAR/JARM, DCR)]
-    RCONS[Consent Manager]
-    RCOLL[Collectors/Normalizers]
-    RDB[(PostgreSQL)]
-    RMDB[(MongoDB)]
-    RREDIS[(Redis)]
-    REVT[(SNS/SQS)]
-  end
+### 5.4 Fluxo de Coleta (Receptor)
 
-  subgraph Holder[Transmissor]
-    AS[Keycloak (FAPI)]
-    HCONS[API Consents]
-    HRES[API Resources]
-    HCUST[API Customers]
-    HACC[API Accounts]
-    HDB[(PostgreSQL)]
-    HMDB[(MongoDB)]
-    HREDIS[(Redis)]
-    HEVT[(SNS/SQS)]
-  end
+```mermaid
+flowchart TD
+    Start([Consent Ativo]) --> Schedule[Scheduler agenda<br/>coleta SQS]
+    Schedule --> Worker[Worker consome<br/>mensagem]
+    Worker --> GetToken{Token<br/>válido?}
+    
+    GetToken -->|Não| Refresh[Refresh token<br/>OAuth2]
+    Refresh --> GetToken
+    GetToken -->|Sim| CallAPI[GET /resources<br/>x-fapi-interaction-id]
+    
+    CallAPI --> CheckStatus{Status?}
+    CheckStatus -->|200| ParseData[Parse dados JSON]
+    CheckStatus -->|429| Backoff[Exponential backoff<br/>retry]
+    Backoff --> CallAPI
+    CheckStatus -->|423| Stop[❌ Quota excedida<br/>aguardar próximo mês]
+    CheckStatus -->|5xx| Retry{Tentativas<br/>< 3?}
+    Retry -->|Sim| Wait[Aguarda 30s]
+    Wait --> CallAPI
+    Retry -->|Não| DLQ[Envia para DLQ]
+    
+    ParseData --> HasNext{Tem próxima<br/>página?}
+    HasNext -->|Sim| NextPage[GET com<br/>pagination-key]
+    NextPage --> CallAPI
+    
+    HasNext -->|Não| SavePG[Salva dados<br/>PostgreSQL]
+    SavePG --> SaveMongo[Salva snapshot<br/>MongoDB]
+    SaveMongo --> Normalize[Normaliza dados]
+    Normalize --> PubEvent[Publica evento<br/>data.fetched]
+    PubEvent --> End([Fim])
+    
+    style Start fill:#90EE90
+    style End fill:#90EE90
+    style Stop fill:#FFB6C1
+    style DLQ fill:#FFB6C1
+```
 
-  subgraph Obs[Observabilidade & PCM]
-    OTL[OpenTelemetry]
-    PM[Prometheus / Datadog]
-    PCM[PCM Exporter]
-  end
+### 5.5 Diagrama de Componentes (APIs DC)
 
-  UI -->|Inicia Consent| RGW
-  RGW -->|DCR (SSA)| AS
-  RGW -->|POST /consents| HCONS
-  UI -->|Auth & Autorização (AS)| AS
-  RGW -->|Tokens| AS
-  RCOLL -->|GET APIs DC| HRES
-  RCOLL -->|GET Customers/Accounts| HCUST & HACC
-  Recipient --> OTL
-  Holder --> OTL
-  OTL --> PM
-  Recipient --> PCM
-  Holder --> PCM
+```mermaid
+graph TB
+    subgraph Gateway["API Gateway Layer"]
+        INGRESS[Ingress NGINX mTLS Termination]
+        RATELIMIT[Rate Limiter Redis]
+    end
+    
+    subgraph Security["Security Layer"]
+        OAUTH[OAuth2 Resource Server JWT Validation]
+        SCOPE[Scope Validator]
+        CONSENT[Consent Validator]
+    end
+    
+    subgraph Business["Business Layer"]
+        CONSVC[Consent Service]
+        RESSVC[Resource Service]
+        CUSTSVC[Customer Service]
+        ACCTSVC[Account Service]
+    end
+    
+    subgraph Integration["Integration Layer"]
+        ADAPTER[Monolith Adapter]
+        CACHE[Response Cache Redis]
+    end
+    
+    subgraph Data["Data Layer"]
+        CONDB[(Consents DB PostgreSQL)]
+        LEGACY[(API Legado)]
+    end
+    
+    subgraph Observability["Observability"]
+        OTEL[OpenTelemetry]
+        METRICS[Metrics Collector]
+        LOGS[Structured Logs]
+    end
+    
+    INGRESS --> RATELIMIT
+    RATELIMIT --> OAUTH
+    OAUTH --> SCOPE
+    SCOPE --> CONSENT
+    
+    CONSENT --> CONSVC
+    CONSENT --> RESSVC
+    CONSENT --> CUSTSVC
+    CONSENT --> ACCTSVC
+    
+    CONSVC --> CONDB
+    RESSVC --> ADAPTER
+    CUSTSVC --> ADAPTER
+    ACCTSVC --> ADAPTER
+    
+    ADAPTER --> CACHE
+    CACHE --> LEGACY
+    
+    CONSVC & RESSVC & CUSTSVC & ACCTSVC --> OTEL
+    CONSVC & RESSVC & CUSTSVC & ACCTSVC --> METRICS
+    CONSVC & RESSVC & CUSTSVC & ACCTSVC --> LOGS
+    
+    style Gateway fill:#e1f5ff
+    style Security fill:#ffe1e1
+    style Business fill:#e1ffe1
+    style Integration fill:#fff4e1
+    style Observability fill:#ffe1f5
+```
+
+### 5.6 Arquitetura de Deployment (Kubernetes)
+
+```mermaid
+graph TB
+    subgraph Internet["Internet"]
+        CLIENT[Clientes]
+    end
+    
+    subgraph EKS["EKS Cluster Existente"]
+        subgraph Ingress["Ingress Layer"]
+            ALB[AWS ALB]
+            NGINX[NGINX Ingress mTLS]
+        end
+        
+        subgraph Namespace1["Namespace: openfinance-holder"]
+            KCDEP[Keycloak Deployment replicas: 3]
+            CONDEP[Consents API replicas: 3]
+            RESDEP[Resources API replicas: 5]
+            CUSTDEP[Customers API replicas: 3]
+            ACCDEP[Accounts API replicas: 5]
+        end
+        
+        subgraph Namespace2["Namespace: openfinance-recipient"]
+            GWDEP[Client Gateway replicas: 3]
+            SCHDEP[Scheduler replicas: 2]
+            WRKDEP[Worker replicas: 10]
+        end
+        
+        subgraph Namespace3["Namespace: observability"]
+            OTELDEP[OTel Collector DaemonSet]
+            PROMDEP[Prometheus StatefulSet]
+        end
+    end
+    
+    subgraph AWS["AWS Services"]
+        RDS[(RDS PostgreSQL Multi-AZ)]
+        DOCDB[(DocumentDB MongoDB Compatible)]
+        ELASTICACHE[(ElastiCache Redis Cluster)]
+        SQS[SQS Queues]
+        SNS[SNS Topics]
+    end
+    
+    subgraph External["External"]
+        LEGACYAPI[API Monolito On-Premises/Cloud]
+        DIRAPI[Diretório OFB]
+        PCMAPI[PCM API]
+    end
+    
+    CLIENT --> ALB
+    ALB --> NGINX
+    NGINX --> KCDEP & CONDEP & RESDEP & CUSTDEP & ACCDEP & GWDEP
+    
+    KCDEP & CONDEP --> RDS
+    RESDEP & CUSTDEP & ACCDEP --> ELASTICACHE
+    GWDEP & WRKDEP --> RDS & DOCDB
+    
+    SCHDEP --> SQS
+    SQS --> WRKDEP
+    
+    RESDEP & CUSTDEP & ACCDEP --> LEGACYAPI
+    KCDEP & CONDEP --> DIRAPI
+    GWDEP --> DIRAPI
+    
+    KCDEP & CONDEP & RESDEP & CUSTDEP & ACCDEP & GWDEP & WRKDEP --> OTELDEP
+    OTELDEP --> PROMDEP
+    
+    CONDEP --> SNS
+    PROMDEP --> PCMAPI
+    
+    style EKS fill:#FF9900
+    style AWS fill:#FF9900
+    style Namespace1 fill:#e1f5ff
+    style Namespace2 fill:#ffe1e1
+    style Namespace3 fill:#ffe1f5
 ```
 
 ---
@@ -124,7 +415,8 @@ flowchart TD
 
 * **AS/OP (Keycloak + extensões FAPI)**: PAR obrigatório; autenticação do client via `private_key_jwt`; `acr` LOA2; access tokens 300–900s; refresh tokens **sem rotação**; OpenID Discovery/.well-known. ([Open Finance Brasil][2])
 * **APIs DC (Spring Boot 3, Virtual Threads)**: `dc-consents-svc`, `dc-resources-svc`, `dc-customers-svc`, `dc-accounts-svc`.
-* **Data Layer**: PostgreSQL (consents/auditoria), MongoDB (payloads versionados), Redis (JWKS cache, throttling, idempotência).
+* **API Monolito (Legado)**: sistema existente com todos os dados a serem transmitidos (clientes, contas, transações, etc.). As APIs DC consultam este monolito para obter os dados no momento da requisição.
+* **Data Layer**: PostgreSQL (consents/auditoria apenas), Redis (JWKS cache, throttling, idempotência).
 * **Eventos**: SNS/SQS — `consent.created/revoked`, `token.issued`, `data.requested`.
 * **API Comum (Discovery)**: publicar `/status`, `/outages`, `/metrics`. ([Open Finance Brasil][4])
 * **Observabilidade/PCM**: OTel (traces/logs/métricas) e export para PCM. ([Open Finance Brasil][8])
@@ -134,7 +426,7 @@ flowchart TD
 1. **DCR**: Receptor registra seu software no AS com **SSA** do Diretório; validações incluem **PS256 no SSA**, `iat` do SSA **≤ 5 minutos**, `jwks_uri` e `redirect_uris` segundo SSA. ([Open Finance Brasil][3])
 2. **Consent**: `POST /consents` → redireciona usuário para autenticação/autorizar no AS (PAR/JAR/JARM). ([Open Finance Brasil][2])
 3. **Tokens**: JARM → troca por tokens (TTL de acesso 300–900s). ([Open Finance Brasil][2])
-4. **Dados**: Receptor consome **Resources/Customers/Accounts** com **`x-fapi-interaction-id` obrigatório** nas chamadas autenticadas. ([Open Finance Brasil][6])
+4. **Dados**: Receptor consome **Resources/Customers/Accounts** com **`x-fapi-interaction-id` obrigatório** nas chamadas autenticadas. As APIs DC consultam a **API Monolito (Legado)** para obter os dados em tempo real. ([Open Finance Brasil][6])
 5. **Status/Outages/Metrics**: publicar e manter atualizados nos endpoints de **Discovery**. ([Open Finance Brasil][4])
 
 ---
@@ -143,10 +435,10 @@ flowchart TD
 
 ### Componentes
 
-* **Frontend (React)**: fluxo “Conectar instituição”, gestão de consentimentos, revogação/expiração.
+* **Frontend (React)**: fluxo "Conectar instituição", gestão de consentimentos, revogação/expiração.
 * **Client Gateway**: DCR (SSA), PAR/JAR/JARM, mTLS, `private_key_jwt`, troca de tokens, gerenciamento de consent. ([Open Finance Brasil][2])
 * **Collectors/Normalizers**: agendadores e workers (SQS) para coleta paginada e normalização.
-* **Data Layer**: PostgreSQL (consents/conexões/auditoria), MongoDB (snapshots de dados), Redis (discovery/JWKS cache, throttling).
+* **Data Layer (Open Finance exclusivo)**: PostgreSQL (consents/conexões/auditoria e dados recebidos via Open Finance), MongoDB (snapshots de dados Open Finance), Redis (discovery/JWKS cache, throttling). Base de dados **isolada e dedicada** para armazenar exclusivamente dados recebidos via Open Finance.
 * **Eventos**: `data.fetched`, `data.normalized`, `consent.expiring`.
 * **Observabilidade/PCM**: mesmos padrões do Holder; reporta métricas no formato exigido. ([Open Finance Brasil][8])
 
@@ -155,7 +447,7 @@ flowchart TD
 1. **DCR** com cada Transmissor-alvo via SSA. ([Open Finance Brasil][3])
 2. **Criar consent** → redirecionar usuário para autenticação/autorizar. ([Open Finance Brasil][2])
 3. **Trocar JARM por tokens** e agendar coletas (uso de `x-fapi-interaction-id`). ([Open Finance Brasil][9])
-4. **Coleta**: paginação + retry com backoff; **`pagination-key`** para não contar rechamadas em limites operacionais. ([Open Finance Brasil][6])
+4. **Coleta**: paginação + retry com backoff; **`pagination-key`** para não contar rechamadas em limites operacionais. Dados coletados são armazenados na **base de dados exclusiva Open Finance**. ([Open Finance Brasil][6])
 5. **Relatórios/Alertas**: expiração de consent, revalidação periódica.
 
 ---
@@ -241,7 +533,8 @@ flowchart TD
 │  │  ├─ dc-resources-svc/
 │  │  ├─ dc-customers-svc/
 │  │  ├─ dc-accounts-svc/
-│  │  └─ dc-quotas-svc/             # rate-limit/quotas por client/softwareId
+│  │  ├─ dc-quotas-svc/             # rate-limit/quotas por client/softwareId
+│  │  └─ monolith-adapter/          # adapter/connector para API Monolito Legado
 │  ├─ recipient/
 │  │  ├─ client-gateway/
 │  │  ├─ collector-scheduler/
@@ -252,7 +545,7 @@ flowchart TD
 │  └─ tools/
 │     └─ pcm-exporter/
 ├─ deploy/
-│  ├─ terraform/                    # EKS, RDS, ElastiCache, VPC, etc.
+│  ├─ terraform/                    # Configurações infraestrutura (RDS, ElastiCache, VPC, etc.)
 │  ├─ helm/                         # charts por serviço + values por ambiente
 │  └─ pipelines/                    # CI/CD (build, testes, conformidade, deploy)
 ├─ docs/
@@ -266,19 +559,23 @@ flowchart TD
 │  │  ├─ apis-dc-consent.md
 │  │  ├─ apis-dc-customers.md
 │  │  ├─ apis-dc-accounts.md
+│  │  ├─ monolith-integration.md
 │  │  └─ data-model.md
 │  ├─ 30-recipient/                 # documentação visão Receptor
 │  │  ├─ dcr-client.md
 │  │  ├─ collectors.md
 │  │  ├─ normalization.md
+│  │  ├─ of-database.md
 │  │  └─ frontend.md
-│  └─ 90-adr/                       # Architecture Decision Records
-│     └─ ADR-0001-fapi-keycloak.md
 └─ README.md                        # este documento
 ```
 
 > **Evolução documental**: cada arquivo em `docs/` aprofunda a camada/componente seguindo o formato: *Objetivo → Responsabilidades → Contratos (OAS) → Configs → Métricas → Testes → Runbook*.
-> Teremos três “ramos” principais: **comum** (`docs/10-common`), **transmissor** (`docs/20-holder`) e **receptor** (`docs/30-recipient`), cada qual com documentação de seus componentes.
+> Teremos três "ramos" principais: **comum** (`docs/10-common`), **transmissor** (`docs/20-holder`) e **receptor** (`docs/30-recipient`), cada qual com documentação de seus componentes.
+>
+> **Decisões arquiteturais chave**:
+> * **Transmissor**: integração com API Monolito Legado via adapter pattern para consulta em tempo real (sem cache de dados transacionais).
+> * **Receptor**: base de dados exclusiva e isolada para armazenamento de dados recebidos via Open Finance, separando-os de outras fontes de dados.
 
 ---
 
@@ -323,27 +620,22 @@ mvn -q -T1C clean verify
 (cd apps/recipient/frontend && npm i && npm run dev)
 ```
 
-### 11.3 Implantação (EKS)
+### 11.3 Implantação (Kubernetes)
 
-1. **Terraform** (provisionamento)
+> **Nota**: utiliza cluster EKS existente.
 
-```bash
-cd deploy/terraform/envs/prod
-terraform init && terraform apply
-```
-
-2. **Helm** (deploy por serviço)
+1. **Helm** (deploy por serviço)
 
 ```bash
 helm upgrade --install dc-consents-svc deploy/helm/dc-consents-svc -f deploy/helm/values/prod.yaml
 ```
 
-3. **Observabilidade**
+2. **Observabilidade**
 
 * OTel Collector como DaemonSet.
 * Datadog Agent (ou Prometheus Operator) com autodiscovery.
 
-4. **Segurança & Certificados**
+3. **Segurança & Certificados**
 
 * Ingress com mTLS (cadeia ICP-Brasil) e rotação automatizada. ([Open Finance Brasil][3])
 
