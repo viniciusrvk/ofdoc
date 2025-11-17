@@ -1,0 +1,152 @@
+<mxfile host="app.diagrams.net" modified="2025-11-12T00:00:00.000Z" agent="GitHub Copilot" etag="v1" version="22.1.0" type="device">
+  <diagram name="Open Finance - Deployment Diagram" id="deployment-diagram">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="external-systems" value="Sistemas Externos" style="swimlane;whiteSpace=wrap;html=1;fillColor=#fff4e1;strokeColor=#d79b00;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="40" width="280" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="directory" value="Diretório de&#xa;Participantes&#xa;&#xa;SSA Validation&#xa;Discovery" style="shape=component;align=center;spacingLeft=36;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" parent="external-systems" vertex="1">
+          <mxGeometry x="20" y="40" width="100" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm" value="PCM&#xa;&#xa;Plataforma de&#xa;Coleta de Métricas" style="shape=component;align=center;spacingLeft=36;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" parent="external-systems" vertex="1">
+          <mxGeometry x="150" y="40" width="100" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="aws-cloud" value="AWS Cloud" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="360" y="40" width="1000" height="820" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="eks-cluster" value="Amazon EKS Cluster" style="swimlane;whiteSpace=wrap;html=1;fillColor=#e1f5ff;strokeColor=#36393d;fontStyle=1" parent="aws-cloud" vertex="1">
+          <mxGeometry x="20" y="40" width="960" height="640" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="holder-ns" value="Namespace: transmissor" style="swimlane;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" parent="eks-cluster" vertex="1">
+          <mxGeometry x="20" y="40" width="450" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="keycloak-pod" value="Pod: Keycloak&#xa;&#xa;Authorization Server&#xa;FAPI-BR Extensions&#xa;PAR, JAR, JARM&#xa;mTLS" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#ffe6cc;strokeColor=#d79b00;size=10;fontStyle=1" parent="holder-ns" vertex="1">
+          <mxGeometry x="20" y="40" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="holder-api-pod" value="Pod: Holder API&#xa;&#xa;Java 25 + Spring Boot&#xa;Virtual Threads&#xa;Consents, Resources&#xa;Customers, Accounts" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#ffe6cc;strokeColor=#d79b00;size=10;fontStyle=1" parent="holder-ns" vertex="1">
+          <mxGeometry x="180" y="40" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="discovery-pod" value="Pod: Discovery API&#xa;&#xa;/status&#xa;/outages&#xa;/metrics" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#ffe6cc;strokeColor=#d79b00;size=10;fontStyle=1" parent="holder-ns" vertex="1">
+          <mxGeometry x="20" y="160" width="140" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="quota-pod" value="Pod: Quotas Service&#xa;&#xa;Rate Limiting&#xa;TPM/TPS Control" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#ffe6cc;strokeColor=#d79b00;size=10;fontStyle=1" parent="holder-ns" vertex="1">
+          <mxGeometry x="180" y="160" width="140" height="90" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="recipient-ns" value="Namespace: receptor" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1" parent="eks-cluster" vertex="1">
+          <mxGeometry x="490" y="40" width="450" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="client-gw-pod" value="Pod: Client Gateway&#xa;&#xa;DCR, PAR/JAR&#xa;Token Management&#xa;mTLS Client" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#fff2cc;strokeColor=#d6b656;size=10;fontStyle=1" parent="recipient-ns" vertex="1">
+          <mxGeometry x="20" y="40" width="140" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="collector-pod" value="Pod: Collector Worker&#xa;&#xa;Scheduled Jobs&#xa;Pagination&#xa;Data Aggregation" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#fff2cc;strokeColor=#d6b656;size=10;fontStyle=1" parent="recipient-ns" vertex="1">
+          <mxGeometry x="180" y="40" width="140" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="normalizer-pod" value="Pod: Normalizer&#xa;&#xa;Data Enrichment&#xa;Transformation" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#fff2cc;strokeColor=#d6b656;size=10;fontStyle=1" parent="recipient-ns" vertex="1">
+          <mxGeometry x="20" y="150" width="140" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="frontend-pod" value="Pod: Frontend&#xa;&#xa;React + Vite&#xa;UI Dashboard" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#fff2cc;strokeColor=#d6b656;size=10;fontStyle=1" parent="recipient-ns" vertex="1">
+          <mxGeometry x="180" y="150" width="140" height="90" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="obs-ns" value="Namespace: observability" style="swimlane;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1" parent="eks-cluster" vertex="1">
+          <mxGeometry x="20" y="340" width="920" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="otel-pod" value="Pod: OpenTelemetry&#xa;&#xa;Collector&#xa;Traces, Metrics, Logs" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#f5f5f5;strokeColor=#666666;size=10;fontStyle=1" parent="obs-ns" vertex="1">
+          <mxGeometry x="20" y="40" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="prometheus-pod" value="Pod: Prometheus&#xa;&#xa;Metrics Storage&#xa;Alerting" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#f5f5f5;strokeColor=#666666;size=10;fontStyle=1" parent="obs-ns" vertex="1">
+          <mxGeometry x="200" y="40" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="datadog-pod" value="Pod: Datadog Agent&#xa;&#xa;APM&#xa;Dashboards" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#f5f5f5;strokeColor=#666666;size=10;fontStyle=1" parent="obs-ns" vertex="1">
+          <mxGeometry x="380" y="40" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="loki-pod" value="Pod: Loki&#xa;&#xa;Log Aggregation" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#f5f5f5;strokeColor=#666666;size=10;fontStyle=1" parent="obs-ns" vertex="1">
+          <mxGeometry x="560" y="40" width="140" height="70" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="msg-ns" value="Namespace: messaging" style="swimlane;whiteSpace=wrap;html=1;fillColor=#fad9d5;strokeColor=#ae4132;fontStyle=1" parent="eks-cluster" vertex="1">
+          <mxGeometry x="20" y="490" width="450" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="kafka-pod" value="Pod: Kafka (optional)&#xa;&#xa;Event Streaming&#xa;Internal Events" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#fff2cc;strokeColor=#d6b656;size=10;fontStyle=1" parent="msg-ns" vertex="1">
+          <mxGeometry x="20" y="40" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="internal-ns" value="Namespace: sistemas-internos" style="swimlane;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1" parent="eks-cluster" vertex="1">
+          <mxGeometry x="490" y="490" width="450" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="core-banking-pod" value="Pod: Core Banking&#xa;&#xa;Gestão de Contas&#xa;Transações&#xa;Cadastro de Clientes" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#f5f5f5;strokeColor=#666666;size=10;fontStyle=1" parent="internal-ns" vertex="1">
+          <mxGeometry x="20" y="40" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="card-system-pod" value="Pod: Cartões&#xa;&#xa;Gestão de Cartões&#xa;Limite de Crédito" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#f5f5f5;strokeColor=#666666;size=10;fontStyle=1" parent="internal-ns" vertex="1">
+          <mxGeometry x="180" y="40" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="investment-pod" value="Pod: Investimentos&#xa;&#xa;Fundos&#xa;Renda Fixa" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;fillColor=#f5f5f5;strokeColor=#666666;size=10;fontStyle=1" parent="internal-ns" vertex="1">
+          <mxGeometry x="320" y="40" width="110" height="70" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="data-services" value="Data Layer" style="swimlane;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" parent="aws-cloud" vertex="1">
+          <mxGeometry x="20" y="700" width="960" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="rds-postgres" value="RDS PostgreSQL&#xa;&#xa;Transactional Data&#xa;Consents, Users" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" parent="data-services" vertex="1">
+          <mxGeometry x="30" y="35" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="mongodb" value="DocumentDB&#xa;&#xa;OF Data Storage&#xa;Flexible Schema" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" parent="data-services" vertex="1">
+          <mxGeometry x="180" y="35" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="redis" value="ElastiCache Redis&#xa;&#xa;Cache, JWKS&#xa;Rate Limit, Session" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1" parent="data-services" vertex="1">
+          <mxGeometry x="330" y="35" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="sns-sqs" value="SNS/SQS&#xa;&#xa;Event Bus&#xa;Async Processing" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1" parent="data-services" vertex="1">
+          <mxGeometry x="500" y="35" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" value="S3&#xa;&#xa;Logs, Backups&#xa;Compliance Data" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1" parent="data-services" vertex="1">
+          <mxGeometry x="650" y="35" width="100" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="conn1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#d79b00;strokeWidth=2;" parent="1" source="directory" target="keycloak-pod" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn1-label" value="SSA Validation" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#d79b00;" parent="conn1" vertex="1" connectable="0">
+          <mxGeometry x="-0.2" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="conn2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#6c8ebf;strokeWidth=2;" parent="1" source="pcm" target="otel-pod" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn2-label" value="Metrics Export" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#6c8ebf;" parent="conn2" vertex="1" connectable="0">
+          <mxGeometry x="-0.2" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="conn3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;strokeWidth=2;" parent="1" source="core-banking-pod" target="holder-api-pod" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn3-label" value="Integração com&#xa;Sistemas Internos" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#d79b00;" parent="conn3" vertex="1" connectable="0">
+          <mxGeometry x="-0.2" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="conn4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;strokeWidth=2;" parent="1" source="client-gw-pod" target="holder-api-pod" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn4-label" value="FAPI-BR Flow (DCR, PAR, Token)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#b85450;" parent="conn4" vertex="1" connectable="0">
+          <mxGeometry x="-0.2" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
